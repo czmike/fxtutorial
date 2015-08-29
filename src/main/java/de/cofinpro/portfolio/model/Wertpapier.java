@@ -24,13 +24,13 @@ public class Wertpapier {
     private final StringProperty isin;
     private final DoubleProperty preis;
     private final StringProperty ticker;
-    private final ObjectProperty<LocalDateTime> lastTime;
+    //private final ObjectProperty<LocalDateTime> lastTime;
 
     /**
      * Default constructor.
      */
     public Wertpapier() {
-        this(null, null, null, null,null);
+        this(null, null, null, null);
     }
 
     /**
@@ -40,9 +40,8 @@ public class Wertpapier {
      * @param isin
      * @param preis
      * @param ticker
-     * @param lastTime
-     */
-    public Wertpapier(String name, String isin, Double preis,String ticker ,LocalDateTime lastTime) {
+      */
+    public Wertpapier(String name, String isin, Double preis,String ticker ) {
         this.name = new SimpleStringProperty(name);
         this.isin = new SimpleStringProperty(isin);
         if(preis != null) {
@@ -53,7 +52,7 @@ public class Wertpapier {
         }
 
         this.ticker = new SimpleStringProperty(ticker);
-        this.lastTime  = new SimpleObjectProperty<LocalDateTime>(LocalDateTime.now());
+        //this.lastTime  = new SimpleObjectProperty<LocalDateTime>(LocalDateTime.now());
     }
 
     public String getName() {
@@ -98,15 +97,4 @@ public class Wertpapier {
 
     public StringProperty tickerProperty() {return ticker;}
 
-    public LocalDateTime getLastTime() {
-        return lastTime.get();
-    }
-
-    public void setLastTime(LocalDateTime lastTime) {
-        this.lastTime.set(lastTime);
-    }
-
-    public ObjectProperty<LocalDateTime> lastTimeProperty() {
-        return lastTime;
-    }
-}
+ }

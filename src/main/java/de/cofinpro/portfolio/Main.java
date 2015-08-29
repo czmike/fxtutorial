@@ -2,6 +2,7 @@ package de.cofinpro.portfolio;
 
 import de.cofinpro.portfolio.model.Wertpapier;
 import de.cofinpro.portfolio.model.WertpapierListWrapper;
+import de.cofinpro.portfolio.util.WertpapierJSON;
 import de.cofinpro.portfolio.view.RootLayoutController;
 import de.cofinpro.portfolio.view.WertpapierEditDialogController;
 import de.cofinpro.portfolio.view.WertpapierOverviewController;
@@ -9,7 +10,6 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.layout.AnchorPane;
@@ -23,22 +23,31 @@ import org.codehaus.jackson.map.ObjectMapper;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.prefs.Preferences;
 
 public class Main extends Application {
 
+    private final String USER_AGENT = "Mozilla/5.0";
     private Stage primaryStage;
     private BorderPane rootLayout;
+
+
 
     private ObservableList<Wertpapier> wertpapierData = FXCollections.observableArrayList();
 
     public Main() {
         // Add some sample data
-        wertpapierData.add(new Wertpapier("Siemens", "DE0007236101", 88.67,"SIEM", LocalDateTime.now()));
-        wertpapierData.add(new Wertpapier("BASF", "DE000BASF111", 71.91, "BASF", LocalDateTime.now()));
+        //wertpapierData.add(new Wertpapier("Siemens", "DE0007236101", 88.67,"SIEM"));
+        //wertpapierData.add(new Wertpapier("BASF", "DE000BASF111", 71.91, "BASF"));
     }
 
     /**
@@ -65,8 +74,8 @@ public class Main extends Application {
         try {
             // Load root layout from fxml file.
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Main.class
-                    .getResource("view/rootlayout.fxml"));
+
+            loader.setLocation(getClass().getClassLoader().getResource("view/rootlayout.fxml"));
             rootLayout = (BorderPane) loader.load();
 
             // Show the scene containing the root layout.
@@ -96,7 +105,7 @@ public class Main extends Application {
         try {
             // Load person overview.
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Main.class.getResource("view/portfolio.fxml"));
+            loader.setLocation(getClass().getClassLoader().getResource("view/portfolio.fxml"));
             AnchorPane wertpapierOverview = (AnchorPane) loader.load();
 
             // Set person overview into the center of root layout.
@@ -113,7 +122,7 @@ public class Main extends Application {
         try {
             // Load the fxml file and create a new stage for the popup dialog.
             FXMLLoader loader = new FXMLLoader();
-            loader.setLocation(Main.class.getResource("view/wertpapierEditDialog.fxml"));
+            loader.setLocation(getClass().getClassLoader().getResource("view/wertpapierEditDialog.fxml"));
             AnchorPane page = (AnchorPane) loader.load();
 
             // Create the dialog Stage.
@@ -249,15 +258,47 @@ public class Main extends Application {
     }
     private void getLatestPreis(Wertpapier wertpapier)
     {
+        String url = "http://192.168.91.16:8080/financeData/getStockInfo?symbol=" +wertpapier.getTicker();
+        StringBuffer response = new StringBuffer();
+
+        try {
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+            // optional default is GET
+            con.setRequestMethod("GET");
+
+            //add request header
+            con.setRequestProperty("User-Agent", USER_AGENT);
+
+            int responseCode = con.getResponseCode();
+            System.out.println("\nSending 'GET' request to URL : " + url);
+            System.out.println("Response Code : " + responseCode);
+
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream()));
+            String inputLine;
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (ProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         ObjectMapper mapper = new ObjectMapper();
 
         try {
 
-            // convert user object to json string, and save to a file
-            //mapper.writeValue(new File("c:\\user.json"), user);
-
-            // display to console
-            System.out.println(mapper.writeValueAsString(wertpapier));
+            WertpapierJSON wertpapierTmp = mapper.readValue(response.toString(), WertpapierJSON.class);
+            wertpapier.setPreis(Double.parseDouble(wertpapierTmp.getPrice()));
+            wertpapier.setName(wertpapierTmp.getName());
 
         } catch (JsonGenerationException e) {
 
