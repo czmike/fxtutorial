@@ -1,0 +1,8 @@
+sample\Controller.class
+de\cofinpro\portfolio\model\Wertpapier.class
+de\cofinpro\portfolio\view\WertpapierEditDialogController.class
+de\cofinpro\portfolio\model\WertpapierListWrapper.class
+de\cofinpro\portfolio\view\WertpapierOverviewController.class
+de\cofinpro\portfolio\Main.class
+de\cofinpro\portfolio\view\RootLayoutController.class
+sample\Main.class
